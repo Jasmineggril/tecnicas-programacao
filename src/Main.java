@@ -1,43 +1,46 @@
 import com.animal.Animal;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
-import java.util.function.Predicate;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class Main {
     public static void main(String[] args) {
 
         List<Animal> animais = new ArrayList<>();
-        animais.add(new Animal("Coelho", true,  false));
-        animais.add(new Animal("Sapo", true, true));
-        animais.add(new Animal("Cobra", false, true));
+        animais.add(new Animal("Coelho", true,  false, 1.0));
+        animais.add(new Animal("Sapo", true, false, 0.2));
+        animais.add(new Animal("Sapo", true, true, 0.1));
+        animais.add(new Animal("Cobra", false, true, 5.0));
 
-        //imprimir(animais, new VerificaSeSaltador());
+        long count = animais.stream()                      //fonte
+                .filter(Animal::podeSalta) //intermediaria
+                //.peek(System.out::println) //intermediaria
+                .sorted(Comparator.comparing(Animal::getNome).thenComparing(Animal::getPeso))
+                //.map(Animal::getNome) //intermediaria
+                //.peek(System.out::println) //intermediaria
+                //.map(s -> s.toUpperCase()) //intermediaria
+                //.peek(System.out::println) //intermediaria
+                /* .map(s -> {
+                     System.out.println("TESTE");Comparator.comparing(Animal::getNome)
+                     return s.length();
+                 })*/ //intermediaria*/
+                //.forEach                .sorted(Comparator.comparing(Animal::getNome). thenComparing(Animal::getPeso))(System.out::println);//terminal
+                //.forEach(System.out::println);
+                //.collect(Collectors.toList());
+                .count();
+        System.out.printf("Quantidade de animais %d", count);
 
-        imprimir_functional(animais, animal -> animal.podeSalta());
-
-       /* Predicate<Animal> podeSaltar = (animal -> animal.podeSalta());
-        Predicate<Animal> podeNadar2 = Animal::podeNadar;
-
-        animais.stream().filter(animal -> animal.podeSalta())
-                        .forEach(animal -> System.out.println(animal.getNome()));
-
-        animais.stream().filter(animal -> animal.podeNadar())
-                .forEach(animal -> System.out.println(animal.getNome()));*/
+       /* Stream<String> stringStream = animais.stream()                      //fonte
+                .filter(Animal::podeSalta) //intermediaria
+                .map(Animal::getNome) //intermediaria
+                .map(s -> s.toUpperCase());//intermediaria*/count
 
 
-    }
+        //TODO Trazer exemplo de paralel stream
 
-    public static void imprimir_functional(List<Animal> animais, Predicate<Animal> pa) {
-        animais.stream().filter(pa)
-                .forEach(animal -> System.out.println(animal.getNome()));
-    }
-
-    public static void imprimir(List<Animal> animais, VerificaSeSaltador verificaSeSaltador) {
-        for (Animal animal : animais) {
-            if(verificaSeSaltador.verificar(animal))
-                System.out.println(animal.getNome());
-        }
     }
 
 }
