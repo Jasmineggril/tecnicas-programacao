@@ -79,10 +79,10 @@ sequenceDiagram
     App->>Repositorio: buscarTodos()
     Repositorio->>ArquivoMotor: carregarTodos("livros")
     ArquivoMotor->>NIO2: Files.list("db/livros")
-    NIO2-->>ArquivoMotor: Stream&lt;Path&gt; [1.dat, 2.dat, ...]
-    ArquivoMotor->>Arquivo: new ObjectInputStream → readObject()
-    ArquivoMotor-->>Repositorio: List&lt;Livro&gt;
-    Repositorio-->>App: List&lt;Livro&gt;
+    NIO2-->>ArquivoMotor: Stream de Path (1.dat, 2.dat, ...)
+    ArquivoMotor->>Arquivo: new ObjectInputStream - readObject()
+    ArquivoMotor-->>Repositorio: List de Livro
+    Repositorio-->>App: List de Livro
 ```
 
 ---
