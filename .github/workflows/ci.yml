@@ -1,0 +1,73 @@
+name: CI
+
+on:
+  pull_request:
+    branches:
+      - develop
+      - main
+  push:
+    branches:
+      - develop
+      - main
+
+jobs:
+  build-develop:
+    name: Build - develop
+    if: github.base_ref == 'develop' || github.ref == 'refs/heads/develop'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Baixar código
+        uses: actions/checkout@v4
+
+      - name: Configurar Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Compilar projeto
+        run: |
+          mkdir -p out
+          javac -encoding UTF-8 -d out \
+            src/simplodb/*.java \
+            src/biblioteca/modelo/*.java \
+            src/biblioteca/repositorio/*.java \
+            src/biblioteca/servico/*.java \
+            src/Main.java
+
+  validate-main:
+    name: Validate - main
+    if: github.base_ref == 'main' || github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Baixar código
+        uses: actions/checkout@v4
+
+      - name: Configurar Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Compilar projeto
+        run: |
+          mkdir -p out
+          javac -encoding UTF-8 -d out \
+            src/simplodb/*.java \
+            src/biblioteca/modelo/*.java \
+            src/biblioteca/repositorio/*.java \
+            src/biblioteca/servico/*.java \
+            src/Main.java
+
+      - name: Executar Main
+        run: |
+          java -Dfile.encoding=UTF-8 -cp out Main > output.txt
+
+      - name: Comparar saída esperada
+        run: |
+          if ! diff -q expected/expected-output.txt output.txt; then
+            echo "Saída do programa não corresponde à saída esperada."
+            exit 1
+          fi
