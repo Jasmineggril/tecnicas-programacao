@@ -13,9 +13,9 @@ Usuario{id=1, nome='Ana Silva', email='ana@email.com'}
 Usuario{id=2, nome='Bruno Costa', email='bruno@email.com'}
 
 === Registrando empréstimos ===
-Empréstimo #1 | Livro: 1 | Usuário: 1 | Vence: 24/05/2026 12:52
-Empréstimo #2 | Livro: 2 | Usuário: 1 | Vence: 24/05/2026 12:52
-Empréstimo #3 | Livro: 3 | Usuário: 2 | Vence: 24/05/2026 12:52
+Empréstimo #1 | Livro: 1 | Usuário: 1 | Vence: 25/05/2026 16:07
+Empréstimo #2 | Livro: 2 | Usuário: 1 | Vence: 25/05/2026 16:07
+Empréstimo #3 | Livro: 3 | Usuário: 2 | Vence: 25/05/2026 16:07
 
 === Tentando emprestar livro já emprestado ===
 OK — exceção esperada: Livro já está emprestado: 1
@@ -31,7 +31,7 @@ Romance: [Dom Casmurro, A Hora da Estrela, Memórias Póstumas de Brás Cubas, P
 Poesia: [Sentimento do Mundo]
 
 === Devolvendo empréstimo #1 ===
-Empréstimo #1 | Livro: 1 | Usuário: 1 | Vence: 24/05/2026 12:52 | Devolvido: 10/05/2026 12:52
+Empréstimo #1 | Livro: 1 | Usuário: 1 | Vence: 25/05/2026 16:07 | Devolvido: 11/05/2026 16:07
 
 === Relatório completo (bônus — Exercício 7) ===
 Top 5 mais emprestados: [Dom Casmurro, A Hora da Estrela, Memórias Póstumas de Brás Cubas]
