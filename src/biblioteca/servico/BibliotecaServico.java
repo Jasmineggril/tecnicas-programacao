@@ -9,6 +9,9 @@ import biblioteca.repositorio.UsuarioRepositorio;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 public class BibliotecaServico {
 
@@ -111,5 +114,58 @@ public class BibliotecaServico {
                 .filter(Emprestimo::estaAtrasado)
                 .map(Emprestimo::calcularMulta)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    // =========================================================================
+    // Exercício 3c — Agrupar empréstimos por usuário (Streams com Collectors)
+    // =========================================================================
+
+    /**
+     * 3c) Agrupa todos os empréstimos por usuário.
+     *
+     * Utiliza Collectors.groupingBy() para organizar os empréstimos conforme
+     * o usuário, retornando um Map onde:
+     *   - Chave: objeto Usuario (identificador único)
+     *   - Valor: List<Emprestimo> (todos os empréstimos desse usuário)
+     *
+     * Exemplo de uso:
+     *   Map<Usuario, List<Emprestimo>> agrupadosPorUsuario = 
+     *       agruparEmprestimosPorUsuario(emprestimoRepo.buscarTodos());
+     *
+     * @param emprestimos Lista de empréstimos a serem agrupados
+     * @return Map contendo usuários como chave e suas listas de empréstimos
+     */
+    public Map<Usuario, List<Emprestimo>> agruparEmprestimosPorUsuario(List<Emprestimo> emprestimos) {
+        // Agrupa os empréstimos por usuário usando Collectors.groupingBy()
+        return emprestimos.stream()
+                .collect(Collectors.groupingBy(emprestimo -> 
+                    usuarioRepo.buscarPorId(emprestimo.getUsuarioId())
+                            .orElseThrow(() -> new IllegalArgumentException(
+                                    "Usuário não encontrado para empréstimo: " + emprestimo.getId()))
+                ));
+    }
+
+    // =========================================================================
+    // Exercício 3d — Filtrar empréstimos atrasados (Streams com Filter)
+    // =========================================================================
+
+    /**
+     * 3d) Filtra e retorna apenas os empréstimos que estão atrasados.
+     *
+     * Utiliza filter() para retornar apenas os empréstimos que estão atrasados,
+     * ou seja, aqueles que não foram devolvidos e já passaram da data prevista.
+     *
+     * Exemplo de uso:
+     *   List<Emprestimo> atrasados = 
+     *       filtrarEmprestimosAtrasados(emprestimoRepo.buscarAbertos());
+     *
+     * @param emprestimos Lista de empréstimos a serem filtrados
+     * @return Lista contendo apenas os empréstimos que estão atrasados
+     */
+    public List<Emprestimo> filtrarEmprestimosAtrasados(List<Emprestimo> emprestimos) {
+        // Filtra os empréstimos mantendo apenas aqueles que estão atrasados
+        return emprestimos.stream()
+                .filter(Emprestimo::estaAtrasado)
+                .collect(Collectors.toList());
     }
 }
