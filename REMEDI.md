@@ -2,104 +2,97 @@
 
 ---
 
-## 3c) Agrupar Empréstimos por Usuário
+## 3c) Top 5 Livros Mais Emprestados
 
 ### Código
 
 ```java
-public Map<Usuario, List<Emprestimo>> agruparEmprestimosPorUsuario(List<Emprestimo> emprestimos) {
-    return emprestimos.stream()
-            .collect(Collectors.groupingBy(emprestimo -> 
-                usuarioRepo.buscarPorId(emprestimo.getUsuarioId())
-                        .orElseThrow(() -> new IllegalArgumentException(
-                                "Usuário não encontrado para empréstimo: " + emprestimo.getId()))
-            ));
-}
-```
-
-### Explicação
-
-**Conceito:** Utiliza `Collectors.groupingBy()` para organizar os empréstimos conforme o usuário responsável.
-
-**Como funciona:**
-- `.stream()` — Transforma a lista em um fluxo de elementos
-- `.collect(Collectors.groupingBy(...))` — Agrupa os elementos por uma chave
-- A função de agrupamento extrai o usuário de cada empréstimo usando `usuarioRepo.buscarPorId()`
-- `orElseThrow()` — Lança exceção se o usuário não existir
-
-**Retorno:** `Map<Usuario, List<Emprestimo>>`
-- **Chaves:** Objetos Usuario
-- **Valores:** Listas de empréstimos desse usuário
-
-**Exemplo de uso:**
-```java
-List<Emprestimo> todos = emprestimoRepo.buscarTodos();
-Map<Usuario, List<Emprestimo>> agrupadosPorUsuario = agruparEmprestimosPorUsuario(todos);
-
-for (Usuario usuario : agrupadosPorUsuario.keySet()) {
-    List<Emprestimo> emprestimosDoUsuario = agrupadosPorUsuario.get(usuario);
-    System.out.println("Usuário: " + usuario.getNome());
-    System.out.println("Empréstimos: " + emprestimosDoUsuario.size());
-}
-```
-
----
-
-## 3d) Filtrar Empréstimos Atrasados
-
-### Código
-
-```java
-public List<Emprestimo> filtrarEmprestimosAtrasados(List<Emprestimo> emprestimos) {
-    return emprestimos.stream()
-            .filter(Emprestimo::estaAtrasado)
+public List<Livro> top5LivrosMaisEmprestados() {
+    return emprestimoRepo.buscarTodos().stream()
+            .collect(Collectors.groupingBy(
+                    Emprestimo::getLivroId,
+                    Collectors.counting()
+            ))
+            .entrySet()
+            .stream()
+            .sorted(Map.Entry.<Long, Long>comparingByValue(Comparator.reverseOrder()))
+            .limit(5)
+            .map(entry -> livroRepo.buscarPorId(entry.getKey()))
+            .filter(Optional::isPresent)
+            .map(Optional::get)
             .collect(Collectors.toList());
 }
 ```
 
 ### Explicação
 
-**Conceito:** Utiliza `filter()` para retornar apenas os empréstimos que estão atrasados (não devolvidos e já passaram do prazo).
+**Conceito:** Conta quantas vezes cada livro foi emprestado, ordena do mais emprestado para o menos e retorna os 5 primeiros.
 
 **Como funciona:**
-- `.stream()` — Transforma a lista em um fluxo de elementos
-- `.filter(Emprestimo::estaAtrasado)` — Mantém apenas elementos que atendem à condição
-  - `Emprestimo::estaAtrasado` é uma referência de método (equivalente a `e -> e.estaAtrasado()`)
-  - Retorna true se o empréstimo não foi devolvido E já passou da data prevista
-- `.collect(Collectors.toList())` — Coleta os elementos filtrados e retorna uma List
+1. `.stream()` — Transforma a lista em um fluxo de empréstimos
+2. `.collect(Collectors.groupingBy(..., Collectors.counting()))` — Agrupa por livroId e conta as ocorrências
+   - Retorna: `Map<Long, Long>` (livroId → quantidade)
+3. `.entrySet().stream()` — Transforma o Map em um stream de entradas
+4. `.sorted(Map.Entry.<Long, Long>comparingByValue(Comparator.reverseOrder()))` — Ordena decrescente por quantidade
+5. `.limit(5)` — Pega apenas os 5 primeiros
+6. `.map(entry -> livroRepo.buscarPorId(entry.getKey()))` — Busca o objeto Livro pelo ID
+7. `.filter(Optional::isPresent).map(Optional::get)` — Remove opcionais vazios
+8. `.collect(Collectors.toList())` — Coleta em uma lista
 
-**Retorno:** `List<Emprestimo>`
-- Contém apenas empréstimos não devolvidos que já passaram da data de devolução prevista
+**Retorno:** `List<Livro>` com até 5 livros mais emprestados (ordenado descendente)
 
-**Exemplo de uso:**
+---
+
+## 3d) Multas Pendentes por Usuário
+
+### Código
+
 ```java
-List<Emprestimo> abertos = emprestimoRepo.buscarAbertos();
-List<Emprestimo> atrasados = filtrarEmprestimosAtrasados(abertos);
-
-System.out.println("Total de empréstimos atrasados: " + atrasados.size());
-for (Emprestimo emp : atrasados) {
-    BigDecimal multa = emp.calcularMulta();
-    System.out.println("Empréstimo #" + emp.getId() + " - Multa: R$ " + multa);
+public Map<Long, BigDecimal> multasPendentesPorUsuario() {
+    return emprestimoRepo.buscarTodos().stream()
+            .filter(Emprestimo::estaAtrasado)
+            .collect(Collectors.toMap(
+                    Emprestimo::getUsuarioId,
+                    Emprestimo::calcularMulta,
+                    BigDecimal::add
+            ));
 }
 ```
+
+### Explicação
+
+**Conceito:** Filtra somente os empréstimos atrasados e soma o valor das multas de cada usuário usando `BigDecimal::add`.
+
+**Como funciona:**
+1. `.stream()` — Transforma a lista em um fluxo de empréstimos
+2. `.filter(Emprestimo::estaAtrasado)` — Mantém apenas empréstimos atrasados
+3. `.collect(Collectors.toMap(...))` — Coleta em um Map com:
+   - **Chave:** `Emprestimo::getUsuarioId` (ID do usuário)
+   - **Valor:** `Emprestimo::calcularMulta()` (multa do empréstimo)
+   - **Merge:** `BigDecimal::add` — Quando o mesmo usuário aparece várias vezes, soma as multas
+
+**Retorno:** `Map<Long, BigDecimal>` (usuarioId → soma total de multas)
 
 ---
 
 ## Resumo para Apresentação
 
-### 3c) Agrupar Empréstimos por Usuário
-> Utiliza `Collectors.groupingBy()` para organizar os empréstimos conforme o usuário. Cada usuário é uma chave em um Map, e o valor é a lista de seus empréstimos.
+### 3c) Top 5 Livros Mais Emprestados
+> Conta quantas vezes cada livro foi emprestado, ordena do mais emprestado para o menos e retorna os 5 primeiros.
 
-### 3d) Filtrar Empréstimos Atrasados
-> Utiliza `filter()` para retornar apenas os empréstimos que estão atrasados. A filtragem é feita através do método `estaAtrasado()`, mantendo apenas aqueles que não foram devolvidos e já passaram da data prevista.
+### 3d) Multas Pendentes por Usuário
+> Filtra somente os empréstimos atrasados e soma o valor das multas de cada usuário usando `BigDecimal::add`.
 
 ---
 
 ## Importações Necessárias
 
 ```java
+import java.math.BigDecimal;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 ```
 
@@ -107,9 +100,9 @@ import java.util.stream.Collectors;
 
 ## Localização no Código
 
-- **Arquivo:** `src/biblioteca/servico/BibliotecaServico.java`
+- **Arquivo:** `src/biblioteca/servico/RelatorioServico.java`
 - **Métodos:** 
-  - `agruparEmprestimosPorUsuario()` (por volta da linha 120)
-  - `filtrarEmprestimosAtrasados()` (por volta da linha 145)
+  - `top5LivrosMaisEmprestados()` (por volta da linha 45)
+  - `multasPendentesPorUsuario()` (por volta da linha 85)
 
 ---

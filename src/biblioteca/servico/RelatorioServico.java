@@ -7,6 +7,7 @@ import biblioteca.repositorio.EmprestimoRepositorio;
 import biblioteca.repositorio.LivroRepositorio;
 
 import java.math.BigDecimal;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -34,14 +35,17 @@ public class RelatorioServico {
     // -------------------------------------------------------------------------
 
     /**
-     * Retorna os 5 livros mais emprestados de todos os tempos.
+     * 3c) Retorna os 5 livros mais emprestados de todos os tempos.
+     *
+     * Conta quantas vezes cada livro foi emprestado, ordena do mais emprestado
+     * para o menos emprestado e retorna até 5 livros.
      *
      * Passos:
      *   1. emprestimoRepo.buscarTodos().stream()
      *   2. .collect(Collectors.groupingBy(Emprestimo::getLivroId, Collectors.counting()))
      *      → produz Map<Long, Long>: livroId → quantidade de empréstimos
      *   3. .entrySet().stream()
-     *   4. .sorted(Map.Entry.<Long, Long>comparingByValue().reversed())
+     *   4. .sorted(Map.Entry.<Long, Long>comparingByValue(Comparator.reverseOrder()))
      *   5. .limit(5)
      *   6. .map(entry -> livroRepo.buscarPorId(entry.getKey()))
      *   7. .filter(Optional::isPresent).map(Optional::get)
@@ -50,8 +54,19 @@ public class RelatorioServico {
      * @return lista de até 5 livros, do mais para o menos emprestado
      */
     public List<Livro> top5LivrosMaisEmprestados() {
-        // TODO Exercício 3c
-        throw new UnsupportedOperationException("Não implementado — veja TODO Exercício 3c");
+        return emprestimoRepo.buscarTodos().stream()
+                .collect(Collectors.groupingBy(
+                        Emprestimo::getLivroId,
+                        Collectors.counting()
+                ))
+                .entrySet()
+                .stream()
+                .sorted(Map.Entry.<Long, Long>comparingByValue(Comparator.reverseOrder()))
+                .limit(5)
+                .map(entry -> livroRepo.buscarPorId(entry.getKey()))
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .collect(Collectors.toList());
     }
 
     // -------------------------------------------------------------------------
@@ -59,8 +74,10 @@ public class RelatorioServico {
     // -------------------------------------------------------------------------
 
     /**
-     * Retorna o total de multas pendentes agrupado por usuário.
-     * Considera apenas empréstimos atrasados e ainda não devolvidos.
+     * 3d) Retorna o total de multas pendentes agrupado por usuário.
+     *
+     * Filtra somente os empréstimos atrasados e soma o valor das multas
+     * de cada usuário usando BigDecimal::add como função de merge.
      *
      * Passos:
      *   1. emprestimoRepo.buscarTodos().stream()
@@ -74,8 +91,13 @@ public class RelatorioServico {
      * @return Map<Long, BigDecimal> de usuarioId → soma das multas pendentes
      */
     public Map<Long, BigDecimal> multasPendentesPorUsuario() {
-        // TODO Exercício 3d
-        throw new UnsupportedOperationException("Não implementado — veja TODO Exercício 3d");
+        return emprestimoRepo.buscarTodos().stream()
+                .filter(Emprestimo::estaAtrasado)
+                .collect(Collectors.toMap(
+                        Emprestimo::getUsuarioId,
+                        Emprestimo::calcularMulta,
+                        BigDecimal::add
+                ));
     }
 
     // -------------------------------------------------------------------------
