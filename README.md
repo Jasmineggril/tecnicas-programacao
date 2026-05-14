@@ -277,7 +277,58 @@ Use `Collectors.groupingBy(Livro::getGenero)`.
 **3c)** `RelatorioServico.top5LivrosMaisEmprestados()`
 Conte os empréstimos por livro (`groupingBy` + `counting`), ordene do mais emprestado para o menos e retorne até 5 livros.
 
-**3d)** `RelatorioServico.multasPendentesPorUsuario()`
+**3c)** `BibliotecaServico.agruparEmprestimosPorUsuario()`
+Agrupe todos os empréstimos por usuário em um `Map<Usuario, List<Emprestimo>>`.
+Use `Collectors.groupingBy()` para organizar os empréstimos conforme o usuário responsável.
+
+**3d)** `BibliotecaServico.filtrarEmprestimosAtrasados()`
+Filtre e retorne apenas os empréstimos que estão atrasados (não devolvidos e já passaram do prazo).
+Use `stream().filter(Emprestimo::estaAtrasado).collect(Collectors.toList())`.
+
+---
+
+### ✅ Soluções Implementadas: 3c e 3d
+
+As questões 3c e 3d foram implementadas e documentadas com exemplos práticos.
+
+**Arquivo:** `src/biblioteca/servico/BibliotecaServico.java`  
+**Documentação:** [SOLUCOES_3C_3D.md](SOLUCOES_3C_3D.md)
+
+#### 3c — Agrupar Empréstimos por Usuário
+
+```java
+public Map<Usuario, List<Emprestimo>> agruparEmprestimosPorUsuario(List<Emprestimo> emprestimos) {
+    return emprestimos.stream()
+            .collect(Collectors.groupingBy(emprestimo -> 
+                usuarioRepo.buscarPorId(emprestimo.getUsuarioId())
+                        .orElseThrow(...)
+            ));
+}
+```
+
+**Conceito:** Utiliza `Collectors.groupingBy()` para organizar os empréstimos conforme o usuário.  
+**Retorno:** `Map<Usuario, List<Emprestimo>>` com usuários como chaves e suas listas de empréstimos.
+
+#### 3d — Filtrar Empréstimos Atrasados
+
+```java
+public List<Emprestimo> filtrarEmprestimosAtrasados(List<Emprestimo> emprestimos) {
+    return emprestimos.stream()
+            .filter(Emprestimo::estaAtrasado)
+            .collect(Collectors.toList());
+}
+```
+
+**Conceito:** Utiliza `filter()` para retornar apenas os empréstimos que estão atrasados.  
+**Retorno:** `List<Emprestimo>` contendo apenas empréstimos não devolvidos que já passaram do prazo.
+
+> Para entender melhor o passo a passo de cada solução, exemplos de uso e comparação com abordagens tradicionais, veja [SOLUCOES_3C_3D.md](SOLUCOES_3C_3D.md).
+
+---
+
+### Exercício 3e — Relatório (complementar a 3d)
+
+**3e)** `RelatorioServico.multasPendentesPorUsuario()`
 Filtre os empréstimos atrasados e some as multas por usuário usando `Collectors.toMap` com a função de merge `BigDecimal::add`.
 
 ---
